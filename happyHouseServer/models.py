@@ -15,7 +15,8 @@ class User(models.Model):
     family_id = models.ForeignKey(
         Family,
         related_name='FamilyMember',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        null=True
     ) # 가족 id
 
 

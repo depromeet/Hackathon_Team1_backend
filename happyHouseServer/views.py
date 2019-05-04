@@ -10,7 +10,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from happyHouseServer.models import User
+from happyHouseServer.models import (
+    User,
+    Family,
+    HouseworkCheck,
+    Housework
+    )
 
 from happyHouseServer.serializers import (
     UserModelSerializer,
@@ -243,7 +248,49 @@ class HouseWorkListAPIView(APIView):
 class ShareAPIView(APIView):
     # [POST] /api/share/{userId} 할 일 리스트 보기
     def post(self,request, *args, **kwargs):
-        sharing_user_id = request.data['sharing_user_id'] # 공유할 사용자 id
+        sharing_user_id = int(request.data['sharing_user_id']) # 공유할 사용자 id
+        inviting_user_id = int(self.kwargs['userId']) # 초대한 사용자 id (그룹장)
+
+        sharing_user_id = UserSignInAPIView.get_decoded_num(self,sharing_user_id)
+        inviting_user_id = UserSignInAPIView.get_decoded_num(self,inviting_user_id)
+
+        try:
+            sharing_user_query = User.objects.get(pk=sharing_user_id) # 공유할 사용자 row
+            inviting_user_query = User.objects.get(pk=inviting_user_id) # 그룹장 row
+
+            before_family_pk = sharing_user_query.family_id_id
+
+            LoggerHandler.server_logger.debug(before_family_pk)
+            LoggerHandler.server_logger.debug(inviting_user_query.family_id_id)
+
+            sharing_user_family_query = Family.objects.get(pk=sharing_user_query.family_id_id)
+            LoggerHandler.server_logger.debug(sharing_user_family_query)
+
+            if (inviting_user_query.family_id_id) != (sharing_user_query.family_id_id): # 그룹장 family_id와 초대 family_id 가 다른 경우
+                # LoggerHandler.server_logger.debug(sharing_user_query.family_id_id)
+                # LoggerHandler.server_logger.debug(sharing_user_query.family_id_id)
+                User.objects.update(family_id=sharing_user_query.family_id_id)
+                LoggerHandler.server_logger.debug(sharing_user_family_query.pk)
+                # sharing_user_family_query.delete() # 삭제
+                Family.objects.filter(pk=before_family_pk).delete()
+            else:
+                pass
+
+            LoggerHandler.server_logger.debug(sharing_user_query.pk)
+
+            a_inviting_user_id = UserSignInAPIView.get_encoded_num(self,int(inviting_user_query.family_id_id))
+            a_sharing_user_id = UserSignInAPIView.get_encoded_num(self,int(sharing_user_query.family_id_id))
+
+            result_msg = {'family_id': inviting_user_query.family_id_id, 'sharing_user_id':a_inviting_user_id}
+
+        except:
+            print("엥")
+            print()
+            return Response({'msg': 'Sharing  Failed'}, status=status.HTTP_200_OK)
+
+        return Response({'msg': 'Sharing with Family Success', 'result': result_msg}, status=status.HTTP_200_OK)
+
+
 
 
 
