@@ -20,6 +20,8 @@ from happyHouseServer.serializers import (
     )
 from django.http import Http404
 
+from happyHouseServer.logger_handler import LoggerHandler
+
 class UserSignInAPIView(APIView):
     serializer_class = UserModelSerializer
 
@@ -38,6 +40,7 @@ class UserSignInAPIView(APIView):
 
             result_msg = 'SignIn Success'
             result_data = {'user_uid': encoded_num, 'nickname': user_nickname, 'profile_url': user_profile_image}
+
             return Response({'msg': result_msg, 'result': result_data}, status=status.HTTP_200_OK)
 
 
@@ -47,6 +50,7 @@ class UserSignInAPIView(APIView):
 
             user_data = json.dumps(user_data)
             # print(type(user_data))
+            LoggerHandler.server_logger.debug(user_data)
             user_data = json.loads(user_data)
             # print(type(user_data))
 
@@ -161,8 +165,6 @@ class UserSignInAPIView(APIView):
             return 0
 
 
-
-
     def get_encoded_num(self, user_id, *args, **kwargs):
         encoded_num = 256780+int(user_id)
         return encoded_num
@@ -170,6 +172,56 @@ class UserSignInAPIView(APIView):
     def get_decoded_num(self, encoded_num, *args, **kwargs):
         decoded_num = encoded_num - 256780
         return decoded_num
+
+
+class AddHouseworkAPIView(APIView):
+    # [POST] /api/task 할 일 추가
+    def post(self, request, *args, **kwargs):
+        housework_name = request.data['housework_name']
+        assignee_id = request.data['assignee_id']
+
+        LoggerHandler.server_logger.debug(assignee_id)
+
+        assignee_id = UserSignInAPIView.get_decoded_num(self,int(request.data['assignee_id']))
+
+        LoggerHandler.server_logger.debug(housework_name)
+        LoggerHandler.server_logger.debug(assignee_id)
+
+        housework_data = {'housework_name': housework_name, 'assignee_id': assignee_id}
+
+        housework_data = json.dumps(housework_data)
+        LoggerHandler.server_logger.debug(housework_data)
+        housework_data = json.loads(housework_data)
+
+        serializer = HouseWorkModelSerializer(data=housework_data)
+
+        if serializer.is_valid():
+            serializer.save()
+
+            housework_id = serializer.data['id']
+            created_time = serializer.data['created_time']
+            housework_name = serializer.data['housework_name']
+            assignee_id = serializer.data['assignee_id']
+
+            assignee_id = UserSignInAPIView.get_encoded_num(assignee_id)
+
+
+            LoggerHandler.server_logger.debug(created_time)
+            LoggerHandler.server_logger.debug(housework_id)
+
+            result_data = {'housework_id':housework_id, 'housework_name':housework_name,'assignee_id':assignee_id,'created_time':created_time}
+            result_data = json.dumps(result_data)
+            result_data = json.loads(result_data)
+
+        else:
+            serializer.errors()
+
+            return Response({'msg': 'Server Error'}, status=status.HTTP_200_OK)
+
+
+
+        return Response({'msg': 'Create Housework Success', 'result': result_data}, status=status.HTTP_200_OK)
+
 
 
 

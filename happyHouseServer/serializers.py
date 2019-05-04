@@ -19,7 +19,7 @@ class FamilyModelSerializer(serializers.ModelSerializer):
 class HouseWorkModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Housework
-        fields = ('id', 'housework_name', 'assignee_id')
+        fields = ('id', 'housework_name', 'assignee_id','created_time')
 
 class HouseworkCheckModelSerializer(serializers.ModelSerializer):
     class Meta:
