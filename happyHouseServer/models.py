@@ -8,10 +8,9 @@ class Family(models.Model):
         ordering=['created_time']
 
 class User(models.Model):
-    user_unique_id = models.IntegerField() # 카카오톡 고유 id
+    user_unique_id = models.IntegerField(unique=True) # 카카오톡 고유 id
     user_name  = models.CharField(max_length=45, null=False) # 카카오톡 프로필 이름
-    user_profile_image = models.ImageField() # 카카오톡 프로필 사진
-    user_email = models.CharField(max_length=100, null=True) # 카카오톡 계정 이메일 (있으면)
+    user_profile_image = models.TextField() # 카카오톡 프로필 사진
     family_id = models.ForeignKey(
         Family,
         related_name='FamilyMember',
@@ -28,6 +27,9 @@ class Housework(models.Model):
         on_delete=models.CASCADE,
         null=False
     ) # 할 일 담당자 id
+    created_time = models.DateTimeField(auto_now_add=True) # 할 일 등록순
+
+    ordering = ['created_time']
 
 class HouseworkCheck(models.Model):
     housework_id = models.ForeignKey(
