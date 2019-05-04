@@ -2,6 +2,7 @@ from django.db import models
 
 
 class Family(models.Model):
+    family_name= models.CharField(max_length=45,default="family")
     created_time = models.DateTimeField(auto_now_add=True) # 생성 시각
 
     class Meta:
@@ -10,12 +11,11 @@ class Family(models.Model):
 class User(models.Model):
     user_unique_id = models.IntegerField(unique=True) # 카카오톡 고유 id
     user_name  = models.CharField(max_length=45, null=False) # 카카오톡 프로필 이름
-    user_profile_image = models.TextField() # 카카오톡 프로필 사진
+    user_profile_image = models.TextField(null=True) # 카카오톡 프로필 사진
     family_id = models.ForeignKey(
         Family,
         related_name='FamilyMember',
-        on_delete=models.CASCADE,
-        null=True
+        on_delete=models.CASCADE
     ) # 가족 id
 
 

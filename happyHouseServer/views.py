@@ -45,8 +45,19 @@ class UserSignInAPIView(APIView):
 
 
         if (is_valid):
+            family_data = {'family_name':"family"}
+            family_serializer = FamilyModelSerializer(data=family_data)
 
-            user_data = {'user_unique_id': user_unique_id, 'user_name': user_nickname, 'user_profile_image':user_profile_image, 'family_id' : None}
+            if family_serializer.is_valid():
+                family_serializer.save()
+                # LoggerHandler.server_logger.debug(family_serializer.data)
+                family_id = family_serializer.data['id']
+                LoggerHandler.server_logger.debug(family_id)
+            else:
+                family_serializer.errors()
+
+
+            user_data = {'user_unique_id': user_unique_id, 'user_name': user_nickname, 'user_profile_image':user_profile_image, 'family_id' : family_id}
 
             user_data = json.dumps(user_data)
             # print(type(user_data))
@@ -64,6 +75,8 @@ class UserSignInAPIView(APIView):
 
                 encoded_num = self.get_encoded_num(user_id)
 
+                user_profile_image = serializer.data['user_profile_image']
+
                 result_msg = 'SignIn Success'
                 result_data = {'user_uid':encoded_num,'nickname': user_nickname, 'profile_url': user_profile_image}
 
@@ -78,10 +91,10 @@ class UserSignInAPIView(APIView):
 
 
     def is_valid_token(self,request, *args,**kwargs):
-        access_token = 'vV7SBtxY6pvCyuODZFoltdXVLSyIzRayanqmlAo9dZsAAAFqg0iMnw'
+        # access_token = 'vV7SBtxY6pvCyuODZFoltdXVLSyIzRayanqmlAo9dZsAAAFqg0iMnw'
 
         # access_token = 'Z2YLCsIYOqHB8FhjnCFhhbrEmJhVn7dRr82Gygo9dZoAAAFqgw66tQ'
-        # access_token = request.data['access_token']
+        access_token = request.data['access_token']
 
         access_token = 'Bearer '+access_token
 
@@ -108,7 +121,7 @@ class UserSignInAPIView(APIView):
                # print("dddddddd")
                # print(user_profile_image)
             else:
-                user_profile_image = ""
+                user_profile_image = None
                 user_nickname = result['properties']['nickname']
 
             return True, user_unique_id, user_profile_image, user_nickname
@@ -203,7 +216,7 @@ class AddHouseworkAPIView(APIView):
             housework_name = serializer.data['housework_name']
             assignee_id = serializer.data['assignee_id']
 
-            assignee_id = UserSignInAPIView.get_encoded_num(assignee_id)
+            assignee_id = UserSignInAPIView.get_encoded_num(self,assignee_id)
 
 
             LoggerHandler.server_logger.debug(created_time)
@@ -218,13 +231,19 @@ class AddHouseworkAPIView(APIView):
 
             return Response({'msg': 'Server Error'}, status=status.HTTP_200_OK)
 
-
-
         return Response({'msg': 'Create Housework Success', 'result': result_data}, status=status.HTTP_200_OK)
 
 
+class HouseWorkListAPIView(APIView):
+    # [POST] /api/tasklist 할 일 리스트 보기
+    # def post(self,request, *args,**kwargs):
+    pass
 
 
+class ShareAPIView(APIView):
+    # [POST] /api/share/{userId} 할 일 리스트 보기
+    def post(self,request, *args, **kwargs):
+        sharing_user_id = request.data['sharing_user_id'] # 공유할 사용자 id
 
 
 
